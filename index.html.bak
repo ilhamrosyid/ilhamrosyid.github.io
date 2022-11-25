@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Weather Radar Merauke</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+        integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+        crossorigin="" />
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+        integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+        crossorigin=""></script>
+    <!-- <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+        integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+        crossorigin=""></script> -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        h3 {
+            margin: 0;
+        }
+
+        .title-bar {
+            position: absolute;
+            width: 100%;
+            height: 120px;
+            z-index: 1000;
+            display: flex;
+            /* padding:10px; */
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            box-shadow: 0 5px 35px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title-bar::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            bottom: 3px;
+            right: 3px;
+            border-radius: 5px;
+            pointer-events: none;
+            background-image: linear-gradient(to bottom, rgba(0, 51, 204, 0.5) 0%, transparent 40%, transparent 50%, transparent 60%, rgba(27, 141, 32, 0.5) 100%);
+        }
+
+        .title-stamar {
+            margin: 10px;
+            flex-grow: 8;
+        }
+
+        .title-stamar h1 {
+            color: #0019a5;
+            font-weight: 700;
+        }
+
+        .logo {
+            
+            position: relative;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #maps {
+            height: 100%;
+            width: 100%;
+        }
+
+        .legend-panel {
+            font-size: 15px;
+            width: 100vw;
+            position: absolute;
+            /* left: 0px;
+  right: 0px; */
+            bottom: 0px;
+            z-index: 1000;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            /* grid-template-rows: repeat(3, 1fr); */
+
+        }
+
+        .legend-items {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+        }
+
+        .legend-ket {
+            outline-style: outset;
+            outline-width: thin;
+            outline-color: #fff;
+        }
+
+        .legend-title {
+            grid-column: 1/4;
+        }
+
+        .radar-loop {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            grid-column: 4/5;
+            border-radius: 80% 20% 90% 10% / 57% 39% 61% 43%;
+            background: linear-gradient(to right, #407862, #85fae1);
+        }
+
+        .legend-time {
+            grid-column: 5/17;
+        }
+
+
+        .hold-point {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        @media screen and (max-width: 720px) {
+            .legend-panel {
+                font-size: 5px;
+            }
+
+            .legend-title {
+                grid-column: 1/5;
+            }
+
+            .legend-time {
+                grid-column: 5/17;
+            }
+
+            .title-stamar {
+                font-size: 10px;
+            }
+        }
+
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="title-bar animate__animated animate__backInRight">
+        <div class="logo">
+            <img src="./img/header.png" alt="logo-bmkg" class="logo-bmkg">
+        </div>
+    </div>
+    <div id="map"></div>
+    <script src="./js/leaflet-rotated-marker.js"></script>
+    <script>
+        var map = L.map('map').setView([-8.4928, 140.3887], 10);
+        // var tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+        // var tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        var tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoidG5hdnJlc2VodCIsImEiOiJjbDMzeTZjeW8wcHJ0M2RwNTU3bGFqN3Y5In0.Htl-LgML53rZqtWyZGdDqw', {
+            maxZoom: 9,
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            id: 'mapbox/streets-v11',
+            // tileSize: 512,
+            // zoomOffset: -1
+        }).addTo(map);
+
+
+        var iconAircraft = L.icon({
+            iconUrl: './img/B736.png',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+            popupAnchor: [0, -14],
+        });
+
+        var iconAircraftActive = L.icon({
+            iconUrl: './img/B736_red.png',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+            popupAnchor: [0, -14],
+        });
+
+        var markers = {};
+
+        async function getDataJson(url) {
+            let res = await fetch(url, { cache: 'no-cache' })
+            return res.json()
+        }
+        async function getDataTxt(url) {
+            let res = await fetch(url, { cache: 'no-cache' })
+            return res.text()
+        }
+
+        var radarLayer = L.layerGroup()
+        var radarImage = L.layerGroup()
+        var flight_layer = L.layerGroup()
+        var sat_layer = L.layerGroup()
+        var mar_layer = L.layerGroup();
+        var radarTile
+        var overlays = {
+            'Flight': flight_layer,
+            'National Coverage Radar': radarLayer,
+            'Local Coverage Radar': radarImage,
+            'Satellite': sat_layer,
+            'Marine Territory': mar_layer
+        };
+
+
+        async function radarRami() {
+            getDataJson("https://rami.bmkg.go.id/api/radar_date").then(data => {
+                radarTime = data.collection
+                console.log(radarTime)
+                radarTime = radarTime.replace(/[^\d]/g, '')
+                console.log(radarTime)
+                radarTime = radarTime.slice(0, -2)
+                if (!radarTile) {
+                    radarTile = L.tileLayer(`https://rami.bmkg.go.id/api/radar_get/dBZ/${radarTime}/{z}/{x}/{y}.png`, {
+                        // maxZoom: 17,
+                        // minZoom: 1,
+                        tms: true,
+                        opacity: 0.5
+                    })
+                    radarTile.addTo(radarLayer)
+                    return console.log("add new layer")
+                }
+                radarTile.setUrl(`https://rami.bmkg.go.id/api/radar_get/dBZ/${radarTime}/{z}/{x}/{y}.png`)
+                console.log("test")
+                // if (radarTile.getTileUrl() != `https://rami.bmkg.go.id/api/radar_get/dBZ/${radarTime}/{z}/{x}/{y}.png`) {
+                //     console.log(radarTile.getTileUrl())
+                //     console.log(`https://rami.bmkg.go.id/api/radar_get/dBZ/${radarTime}/{z}/{x}/{y}.png`)
+                //     console.log("set new url layer " + radarTime)
+
+                // }
+            })
+        }
+        radarRami()
+        radar_api = "https://www.meteosoetta.com/radaronline/datradcgkapi_x1.php";
+        radar_prefix = "https://inderaja.bmkg.go.id/Radar/MERA_SingleLayerCRefQC.png?id=2747484ivutulonmpfizb3k";
+        lok = "JAK"
+        lop = 6
+        var radar_JAK_img
+        var radar_img_array = []
+        var radar_JAK_loc = [[-6.234257616796763, 138.5816711637575],
+        [-10.30130394398069, 142.1957240971871]];
+        getDataTxt(`${radar_api}?lok=${lok}&lop=${lop}`).then(data => {
+            radar_img_array = data.split(";")
+            radar_img_array.pop()
+            radar_img_array.forEach((element, index) => {
+                radar_img_array[index] = radar_prefix + element
+            });
+            radar_JAK_img = L.imageOverlay(radar_img_array[0], radar_JAK_loc, { zIndex: 1, opacity: 0.6 }).addTo(radarImage);
+            console.log(radar_img_array)
+        })
+
+        //https://data-live.flightradar24.com/zones/fcgi/feed.js?bounds=6,-11,95,141
+        console.log(radar_img_array[0])
+        console.log(radar_JAK_loc)
+
+        //////////radar fr24
+        async function flightGet() {
+            let response = await fetch("./datafr.json", { cache: 'no-cache', mode: "no-cors" })
+            return response.json()
+        }
+        function flight() {
+            flightGet().then(data => {
+                console.log("tes data")
+                delete data.full_count
+                delete data.version
+                console.log(data)
+                feed.receive(data);
+            })
+        }
+        /**
+* Feed
+*
+*/
+        var feed = {};
+
+        /**
+         * Fetch new aircrafts
+         *
+         */
+        feed.fetch = function () {
+            var script = document.createElement("script");
+            script.src = feedUrl;
+            document.body.appendChild(script);
+        };
+
+        /**
+         * Callback when receiving aircraft data
+         *
+         */
+        feed.receive = function (data) {
+            // Transform raw data to aircrafts array
+            var aircrafts = Object.keys(data).map(function (aircraftId) {
+                return feed.decode(data[aircraftId]);
+            }).filter(function (aircraft) {
+                return aircraft.lat && aircraft.lng;
+            });
+
+            // Update lat / lng of aircrafts
+            aircrafts.forEach(function (aircraft) {
+
+                if (!markers[aircraft.hex]) {
+                    markers[aircraft.hex] = L.marker([aircraft.lat, aircraft.lng], {
+                        icon: iconAircraft,
+                        rotationOrigin: "center",
+                        aircraftHex: aircraft.hex,
+                    });
+                    markers[aircraft.hex].addTo(flight_layer);
+                    markers[aircraft.hex].bindPopup("");
+                    markers[aircraft.hex].on("popupopen", function () {
+                        markers[aircraft.hex].setIcon(iconAircraftActive);
+                    });
+                    markers[aircraft.hex].on("popupclose", function () {
+                        markers[aircraft.hex].setIcon(iconAircraft);
+                    });
+                }
+
+                markers[aircraft.hex].setLatLng([aircraft.lat, aircraft.lng]);
+                markers[aircraft.hex].setRotationAngle(aircraft.track);
+
+                var popupContent = "<b>Hex:</b> " + aircraft.hex + "<br>"
+                    + "<b>Callsign:</b> " + (aircraft.flight ? aircraft.flight : '-') + "<br>"
+                    + "<b>Flight Number:</b> " + (aircraft.flightnum ? aircraft.flightnum : '-') + "<br>"
+                    + "<b>Route:</b> " + (aircraft.departure ? aircraft.departure + '-' + aircraft.destination : '-') + "<br>"
+                    + "<b>Latitude:</b> " + aircraft.lat + "<br>"
+                    + "<b>Longitude:</b> " + aircraft.lng + "<br>"
+                    + "<b>Altitude:</b> " + aircraft.altitude + " ft<br>"
+                    + "<b>Track:</b> " + aircraft.track + "&deg;<br>"
+                    + "<b>Speed:</b> " + aircraft.speed + " kts";
+                markers[aircraft.hex].getPopup().setContent(popupContent);
+            });
+
+            // Delete not visible aircrafts
+            for (var i in markers) {
+                var marker = markers[i];
+                var aircraft = aircrafts.find(function (aircraft) { return aircraft.hex === marker.options.aircraftHex; });
+                if (!aircraft) {
+                    flight_layer.removeLayer(marker);
+                    delete markers[i];
+                }
+            }
+        };
+
+        /**
+         * Decode the raw aicraft data
+         *
+         */
+        feed.decode = function (aircraft) {
+            return {
+                hex: aircraft[0],
+                lat: aircraft[1],
+                lng: aircraft[2],
+                track: aircraft[3],
+                altitude: aircraft[4],
+                speed: aircraft[5],
+                departure: aircraft[11],
+                destination: aircraft[12],
+                flightnum: aircraft[13],
+                flight: aircraft[16],
+            };
+        };
+
+        // function fr24_callback(data) {
+        //     feed.receive(data);
+        // }
+
+
+        flight()
+
+
+        var layerControl = L.control.layers(null, overlays).addTo(map);
+        flight_layer.addTo(map)
+        radarLayer.addTo(map)
+
+
+        window.onload = function () {
+
+            setInterval(async function () {
+                await radarRami()
+                await flight()
+                getDataTxt(`${radar_api}?lok=${lok}&lop=${lop}`).then(data => {
+                    radar_img_array = data.split(";")
+                    radar_img_array.pop()
+                    radar_img_array.forEach((element, index) => {
+                        radar_img_array[index] = radar_prefix + element
+                    });
+                    radar_JAK_img.setUrl(radar_img_array[0])
+                })
+            }, 10000)
+        }
+        var sat_url = `https://inderaja.bmkg.go.id/IMAGE/HIMA/H08_EH_Indonesia.png?id=${Math.floor(Math.random() * 10000)}`;
+        var sat_loc = [[20, 90], [-20, 150]];
+        var offset_x_sat = 0;
+        var offset_y_sat = 0.1;
+        var sat_hima_loc = [[20 + offset_y_sat, 90 + offset_x_sat], [-20 + offset_y_sat, 150 + offset_x_sat]];
+        var sat_img = L.imageOverlay(sat_url, sat_hima_loc, { zindex: 400, opacity: 0.5 }).addTo(sat_layer);
+        setInterval(() => {
+            sat_url = `https://inderaja.bmkg.go.id/IMAGE/HIMA/H08_EH_Indonesia.png?id=${Math.floor(Math.random() * 10000)}`;
+            sat_img.setUrl(sat_url);
+        }, 60000)
+
+
+        /////////////Maritime Layer////////////
+        function getcolor(wave_cat) {
+            return wave_cat == "Tenang" ? '#2793F2' :
+                wave_cat == "Rendah" ? '#00D342' :
+                    wave_cat == "Sedang" ? '#FFF200' :
+                        wave_cat == "Tinggi" ? '#FD8436' :
+                            wave_cat == "Sangat Tinggi" ? '#FB0510' :
+                                wave_cat == "Ekstrem" ? '#EF38CE' :
+                                    wave_cat == "Sangat Ekstrem" ? '#000000' : undefined
+        }
+
+        // class cumar_json_extend {
+        //     constructor(data, code) {
+        //         this.layer_code = code
+        //         this.layer_data = L.geoJson(data, { style: style })
+        //     }
+        //     static loadCumar(wilcode) {
+        //         const cumar_code_json_url = {
+        //             "R01": "./json/r1.json",
+        //             "R02": "./json/r2.json",
+        //             "R03": "./json/r3.json",
+        //             "R04": "./json/r4.json",
+        //             "R05": "./json/r5.json",
+        //             "R06": "./json/r6.json",
+        //             "R07": "./json/r7.json",
+        //             "R08": "./json/r8.json",
+        //         };
+        //         this.cumar_url = cumar_code_json_url[wilcode];
+        //         return fetch(`json/${wilcode}.json?id=${Math.floor(Math.random() * 10000)}`)
+        //             .then(response => response.json())
+        //         //.then(data => new this(wilcode, data))
+        //     }
+        //     static loadWilayah(wilcode) {
+        //         return wilayah_perairan_json.features.find(element => element.properties.Field_SPLI == wilcode);
+        //     }
+        //     static findIndexWilayah(wilcode) {
+        //         return wilayah_perairan_json.features.findIndex(element => element.properties.Field_SPLI == wilcode);
+        //     }
+        //     static async wilayahPerairan(wilcode) {
+        //         try {
+        //             const loading_icon = document.querySelector(".lds-roller")
+        //             loading_icon.classList.remove("hidden-control");
+        //             let wilayah_perairan_selected = { "type": "FeatureCollection", "features": [] }
+        //             for (const code of wilcode) {
+        //                 let data_contents = await cumar_json_extend.loadCumar(code)
+        //                 let index_wilayah = cumar_json_extend.findIndexWilayah(code)
+        //                 // console.log(code)
+        //                 Object.assign(wilayah_perairan_json.features[index_wilayah].properties, { cumar: data_contents });
+        //                 wilayah_perairan_selected.features.push(wilayah_perairan_json.features[index_wilayah])
+        //             }
+        //             loading_icon.classList.add("hidden-control");
+        //             return new this(wilayah_perairan_selected, wilcode)
+        //         }
+        //         catch { console.log("error") }
+        //     }
+        //     async update_json() {
+        //         try {
+        //             //console.log("testing")
+        //             let data_json = await cumar_json_extend.wilayahPerairan(this.layer_code)
+        //             this.layer_data.setStyle((feature) => {
+        //                 return {
+        //                     fillColor: getcolor(feature.properties.cumar.data[time_utc_maritim()].wave_cat),
+        //                     color: 'white'
+        //                 };
+        //             })
+        //             // this.layer_data.eachLayer(function (layer) {
+        //             //     layer.setPopupContent(popup_cumar(layer), {
+        //             //         maxWidth: "auto",
+        //             //         className: "pop-laut"
+        //             //     })
+        //             // })
+        //         }
+        //         catch {
+        //             console.log("error")
+        //         }
+        //     }
+
+        // }
+
+        dataGeojson = getDataJson("./json/wil_perairan.json")
+        dataGeojson.then(data => {
+            var peta_maritim = L.geoJson(data, {
+                style: {
+                    color: 'white'
+                }
+            })
+            peta_maritim.eachLayer(function (layer) {
+                console.log(layer.feature.properties.Field_SPLI)
+                getDataJson(`./json/${layer.feature.properties.Field_SPLI}.json`)
+                let data_perairan = getDataJson(`./json/${layer.feature.properties.Field_SPLI}.json`)
+                data_perairan.then(data => {
+                    console.log(data.data[0].wave_cat)
+                    layer.setStyle({
+                        fill: true,
+                        fillColor: getcolor(data.data[0].wave_cat),
+                        fillOpacity: 1,
+
+                    })
+                })
+
+
+            })
+            peta_maritim.addTo(mar_layer)
+            mar_layer.addTo(map)
+        })
+
+
+
+
+    </script>
+
+    <div id="legend-panel" class="legend-panel">
+        <h3 class="legend-title"> Radar Legend Panel</h3><span class="radar-loop"><b>LOOP</b></span><span
+            class="legend-time radar_time"></span>
+        <div class="legend-items" id="btn-modal-rasa" style="background-color: #00ffff; color: black;"><b>-10.0</b>
+        </div>
+        <div class="legend-items " id="btn-modal-5m" style="background-color: #00ff80; color: black;"><b>10.0</b></div>
+        <div class="legend-items" style="background-color: #00ff00; color: black;"><b>13.0</b></div>
+        <div class="legend-items" style="background-color: #00af00; color: black;"><b>18.0</b></div>
+        <div class="legend-items" style="background-color: #009632; color: black;"><b>23.0</b></div>
+        <div class="legend-items" style="background-color: #ffff00; color: black;"><b>28.0</b></div>
+        <div class="legend-items" style="background-color: #ffc800; color: black;"><b>33.0</b></div>
+        <div class="legend-items" style="background-color: #ffaa00; color: black;"><b>38.0</b></div>
+        <div class="legend-items" style="background-color: #ff5500; color: black;"><b>43.0</b></div>
+        <div class="legend-items" id="control-radar" style="background-color: #ff0000; color: black;"><b>48.0</b></div>
+        <div class="legend-items" style="background-color: #ff0064; color: black;"><b>53.0</b></div>
+        <div class="legend-items" style="background-color: #ff00ff; color: black;"><b>58.0</b></div>
+        <div class="legend-items" style="background-color: #ff80ff; color: black;"><b>63.0</b></div>
+        <div class="legend-items" style="background-color: #ffc8ff; color: black;"><b>68.0</b></div>
+        <div class="legend-items" style="background-color: #ffe1ff; color: black;"><b>73.0</b></div>
+        <div class="legend-items" style="background-color: #ffffff; color: black;"><b>78.0</b></div>
+        <div class="legend-items legend-ket" style="grid-column: 1/3;"><b>Berawan</b></div>
+        <div class="legend-items legend-ket" style="grid-column: 3/6;"><b>Hujan Sangat Ringan</b></div>
+        <div class="legend-items legend-ket" style="grid-column: 6/8;"><b>Hujan Ringan</b></div>
+        <div class="legend-items legend-ket" style="grid-column: 8/10;"><b>Hujan Sedang</b></div>
+        <div class="legend-items legend-ket" style="grid-column: 10/12;"><b>Hujan Lebat</b></div>
+        <div class="legend-items legend-ket" style="grid-column: 12/17;"><b>Hujan Sangat Lebat</b></div>
+    </div>
+</body>
+
+</html>

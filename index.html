@@ -1,0 +1,346 @@
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        h3 {
+            margin: 0;
+        }
+
+        .title-bar {
+            position: absolute;
+            width: 100%;
+            height: 120px;
+            z-index: 1000;
+            display: flex;
+            /* padding:10px; */
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            box-shadow: 0 5px 35px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title-bar::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            bottom: 3px;
+            right: 3px;
+            border-radius: 5px;
+            pointer-events: none;
+            background-image: linear-gradient(to bottom, rgba(0, 51, 204, 0.5) 0%, transparent 40%, transparent 50%, transparent 60%, rgba(27, 141, 32, 0.5) 100%);
+        }
+
+        .logo {
+            
+            position: relative;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .radar-loop {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            grid-column: 4/5;
+            border-radius: 80% 20% 90% 10% / 57% 39% 61% 43%;
+            background: linear-gradient(to right, #407862, #85fae1);
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+    </style>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+          crossorigin="anonymous"/>
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+          integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+          crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+             integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+             crossorigin="">
+            </script>
+    <title>weather radar bengkulu</title>
+</head>
+<body>
+    <div class="title-bar animate__animated animate__backInRight">
+        <div class="logo">
+            <img src="./img/headerkop.png" alt="logo-bmkg" class="logo-bmkg">
+        </div>
+    </div>
+    <div id="map" class="container-fluid"></div>
+    <script src="./js/leaflet-rotated-marker.js"></script>
+
+    <script>
+        var map = L.map('map').setView([-3.85908,102.34167], 9);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.marker([-3.85908,102.34167],{title:'Radar Cuaca Bengkulu'}).addTo(map);
+
+        var iconAircraft = L.icon({
+            iconUrl: './img/icon_pesawat.png',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+            popupAnchor: [0, -14],
+        });
+
+        var iconAircraftActive = L.icon({
+            iconUrl: './img/icon_pesawat2.png',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+            popupAnchor: [0, -14],
+        });
+
+        var markers = {};
+
+        async function getDataJson(url) {
+            let res = await fetch(url, { cache: 'no-cache' })
+            return res.json()
+        }
+        async function getDataTxt(url) {
+            let res = await fetch(url, { cache: 'no-cache' })
+            return res.text()
+        }
+
+        var radarLayer = L.layerGroup()
+        var radarImage = L.layerGroup()
+        var flight_layer = L.layerGroup()
+        var sat_layer = L.layerGroup();
+        var radarTile
+        var overlays = {
+            'Flight': flight_layer,
+            'Radar Integrasi': radarLayer,
+            'Radar Bengkulu': radarImage,
+            'Satelit': sat_layer
+        };
+
+        async function radarRami() {
+            getDataJson("https://rami.bmkg.go.id/api/radar_date").then(data => {
+                radarTime = data.collection
+                console.log(radarTime)
+                radarTime = radarTime.replace(/[^\d]/g, '')
+                console.log(radarTime)
+                radarTime = radarTime.slice(0, -2)
+                if (!radarTile) {
+                    radarTile = L.tileLayer(`https://rami.bmkg.go.id/api/radar_get/dBZ/${radarTime}/{z}/{x}/{y}.png`, {
+                        // maxZoom: 17,
+                        // minZoom: 1,
+                        tms: true,
+                        opacity: 0.5
+                    })
+                    radarTile.addTo(radarLayer)
+                    return console.log("add new layer")
+                }
+                radarTile.setUrl(`https://rami.bmkg.go.id/api/radar_get/dBZ/${radarTime}/{z}/{x}/{y}.png`)
+                console.log("test")
+                // if (radarTile.getTileUrl() != `https://rami.bmkg.go.id/api/radar_get/dBZ/${radarTime}/{z}/{x}/{y}.png`) {
+                //     console.log(radarTile.getTileUrl())
+                //     console.log(`https://rami.bmkg.go.id/api/radar_get/dBZ/${radarTime}/{z}/{x}/{y}.png`)
+                //     console.log("set new url layer " + radarTime)
+
+                // }
+            })
+        }
+        radarRami()
+        radar_api = "";
+        radar_prefix = "https://inderaja.bmkg.go.id/Radar/BENG_SingleLayerCRefQC.png?id=067342zriu6mngqa420ck5p";
+        lok = "JAK"
+        lop = 6
+        var radar_JAK_img
+        var radar_img_array = []
+        var radar_JAK_loc = [[-1.88, 100.36],
+        [-5.83, 104.32]];
+        getDataTxt(`${radar_api}?lok=${lok}&lop=${lop}`).then(data => {
+            radar_img_array = data.split(";")
+            radar_img_array.pop()
+            radar_img_array.forEach((element, index) => {
+                radar_img_array[index] = radar_prefix + element
+            });
+            radar_JAK_img = L.imageOverlay(radar_img_array[0], radar_JAK_loc, { zIndex: 1, opacity: 0.6 }).addTo(radarImage);
+            console.log(radar_img_array)
+        })
+
+        //https://data-live.flightradar24.com/zones/fcgi/feed.js?bounds=6,-11,95,141
+        console.log(radar_img_array[0])
+        console.log(radar_JAK_loc)
+
+        //////////radar fr24
+        async function flightGet() {
+            let response = await fetch("./datafr.json", { cache: 'no-cache', mode: "no-cors" })
+            return response.json()
+        }
+        function flight() {
+            flightGet().then(data => {
+                //console.log(data)
+                feed.receive(data);
+            })
+        }
+        /**
+* Feed
+*
+*/
+        var feed = {};
+
+        /**
+         * Fetch new aircrafts
+         *
+         */
+        feed.fetch = function () {
+            var script = document.createElement("script");
+            script.src = feedUrl;
+            document.body.appendChild(script);
+        };
+
+        /**
+         * Callback when receiving aircraft data
+         *
+         */
+        feed.receive = function (data) {
+            // Transform raw data to aircrafts array
+            var aircrafts = Object.keys(data).map(function (aircraftId) {
+                return feed.decode(data[aircraftId]);
+            }).filter(function (aircraft) {
+                return aircraft.lat && aircraft.lng;
+            });
+
+            // Update lat / lng of aircrafts
+            aircrafts.forEach(function (aircraft) {
+
+                if (!markers[aircraft.hex]) {
+                    markers[aircraft.hex] = L.marker([aircraft.lat, aircraft.lng], {
+                        icon: iconAircraft,
+                        rotationOrigin: "center",
+                        aircraftHex: aircraft.hex,
+                    });
+                    markers[aircraft.hex].addTo(flight_layer);
+                    markers[aircraft.hex].bindPopup("");
+                    markers[aircraft.hex].on("popupopen", function () {
+                        markers[aircraft.hex].setIcon(iconAircraftActive);
+                    });
+                    markers[aircraft.hex].on("popupclose", function () {
+                        markers[aircraft.hex].setIcon(iconAircraft);
+                    });
+                }
+
+                markers[aircraft.hex].setLatLng([aircraft.lat, aircraft.lng]);
+                markers[aircraft.hex].setRotationAngle(aircraft.track);
+
+                var popupContent = "<b>Hex:</b> " + aircraft.hex + "<br>"
+                    + "<b>Callsign:</b> " + (aircraft.flight ? aircraft.flight : '-') + "<br>"
+                    + "<b>Flight Number:</b> " + (aircraft.flightnum ? aircraft.flightnum : '-') + "<br>"
+                    + "<b>Route:</b> " + (aircraft.departure ? aircraft.departure + '-' + aircraft.destination : '-') + "<br>"
+                    + "<b>Latitude:</b> " + aircraft.lat + "<br>"
+                    + "<b>Longitude:</b> " + aircraft.lng + "<br>"
+                    + "<b>Altitude:</b> " + aircraft.altitude + " ft<br>"
+                    + "<b>Track:</b> " + aircraft.track + "&deg;<br>"
+                    + "<b>Speed:</b> " + aircraft.speed + " kts";
+                markers[aircraft.hex].getPopup().setContent(popupContent);
+            });
+
+            // Delete not visible aircrafts
+            for (var i in markers) {
+                var marker = markers[i];
+                var aircraft = aircrafts.find(function (aircraft) { return aircraft.hex === marker.options.aircraftHex; });
+                if (!aircraft) {
+                    flight_layer.removeLayer(marker);
+                    delete markers[i];
+                }
+            }
+        };
+
+        /**
+         * Decode the raw aicraft data
+         *
+         */
+        feed.decode = function (aircraft) {
+            return {
+                hex: aircraft[0],
+                lat: aircraft[1],
+                lng: aircraft[2],
+                track: aircraft[3],
+                altitude: aircraft[4],
+                speed: aircraft[5],
+                departure: aircraft[11],
+                destination: aircraft[12],
+                flightnum: aircraft[13],
+                flight: aircraft[16],
+            };
+        };
+
+        // function fr24_callback(data) {
+        //     feed.receive(data);
+        // }
+
+
+        flight()
+
+
+        var layerControl = L.control.layers(null, overlays).addTo(map);
+        flight_layer.addTo(map)
+        radarLayer.addTo(map)
+
+
+        window.onload = function () {
+
+            setInterval(async function () {
+                await radarRami()
+                await flight()
+                getDataTxt(`${radar_api}?lok=${lok}&lop=${lop}`).then(data => {
+                    radar_img_array = data.split(";")
+                    radar_img_array.pop()
+                    radar_img_array.forEach((element, index) => {
+                        radar_img_array[index] = radar_prefix + element
+                    });
+                    radar_JAK_img.setUrl(radar_img_array[0])
+                })
+            }, 10000)
+        }
+        var sat_url = `https://inderaja.bmkg.go.id/IMAGE/HIMA/H08_EH_Indonesia.png?id=${Math.floor(Math.random() * 10000)}`;
+        var sat_loc = [[20, 90], [-20, 150]];
+        var offset_x_sat = 0;
+        var offset_y_sat = 0.1;
+        var sat_hima_loc = [[20 + offset_y_sat, 90 + offset_x_sat], [-20 + offset_y_sat, 150 + offset_x_sat]];
+        var sat_img = L.imageOverlay(sat_url, sat_hima_loc, { zindex: 400, opacity: 0.5 }).addTo(sat_layer);
+        setInterval(() => {
+            sat_url = `https://inderaja.bmkg.go.id/IMAGE/HIMA/H08_EH_Indonesia.png?id=${Math.floor(Math.random() * 10000)}`;
+            sat_img.setUrl(sat_url);
+        }, 60000)
+
+                
+    </script>
+    
+    <script>
+        #var imageUrl = 'C:/xampp/htdocs/leafletmaps/2022052504300703dBZ.cmax.png',
+        #imageBounds = [[-1.88, 100.36], [-5.83, 104.32]];
+        #L.imageOverlay(imageUrl, imageBounds).addTo(map);
+    </script>
+    <script>
+        #var flight = L.tileLayer('https://data-live.flightradar24.com/zones/fcgi/feed.js?bounds=6,-11,95,141',
+        #{transparent : true})
+        #L.imageOverlay(flight).addTo(map);
+    </script>
+
+    <script>
+        #var imageUrl = 'C:/xampp/htdocs/leafletmaps/H08_EH_Indonesia2.png',
+        #imageBounds = [[6.0, 95.0], [-11.0, 141.0]];
+        #L.imageOverlay(imageUrl, imageBounds).addTo(map);
+    </script>
+
+</body>
+
+</html>

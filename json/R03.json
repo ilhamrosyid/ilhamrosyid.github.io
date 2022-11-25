@@ -1,0 +1,67 @@
+{
+    "code": "R.03",
+    "name": "Laut Arafuru timur Kepulauan Aru",
+    "issued": "2022-06-02 05:00 UTC",
+    "data": [
+        {
+            "valid_from": "2022-06-02 12:00 UTC",
+            "valid_to": "2022-06-03 00:00 UTC",
+            "time_desc": "Hari ini",
+            "weather": "Berawan",
+            "weather_desc": "PADA UMUMNYA RAH ANGIN BERGERAK DARI TIMUR S.D TENGGARA DENGAN KECEPATAN 8 - 20 KT.",
+            "warning_desc": "NIL",
+            "station_remark": "-",
+            "wave_cat": "Extreme",
+            "wave_desc": "0.5 - 1.25 m",
+            "wind_from": "Timur",
+            "wind_to": "Tenggara",
+            "wind_speed_min": 8,
+            "wind_speed_max": 15
+        },
+        {
+            "valid_from": "2022-06-03 00:00 UTC",
+            "valid_to": "2022-06-03 12:00 UTC",
+            "time_desc": "Besok",
+            "weather": "Berawan",
+            "weather_desc": "PADA UMUMNYA ARAH ANGIN BERGERAK DARI TIMUR S.D TENGGARA DENGAN KECEPATAN 5 - 25 KT.",
+            "warning_desc": "NIL",
+            "station_remark": "-",
+            "wave_cat": "Rendah",
+            "wave_desc": "0.5 - 1.25 m",
+            "wind_from": "Timur",
+            "wind_to": "Tenggara",
+            "wind_speed_min": 5,
+            "wind_speed_max": 15
+        },
+        {
+            "valid_from": "2022-06-03 12:00 UTC",
+            "valid_to": "2022-06-04 12:00 UTC",
+            "time_desc": "H+2",
+            "weather": null,
+            "weather_desc": "<ul>\n\t<li>BELOKAN ANGIN TERPANTAU DI LAUT ARAFURU</li>\n\t<li>PADA UMUMNYA ARAH ANGIN BERGERAK DARI TIMUR S.D TENGGARA DENGAN KECEPATAN 5 - 25 KT.</li>\n</ul>",
+            "warning_desc": "BERPOTENSI GELOMBANG TINGGI MENCAPAI 3 METER DAN ANGIN KENCANG DI LAUT ARAFURU&nbsp;",
+            "station_remark": "POTENSI HUJAN SEDANG HINGGA LEBAT DISERTAI PETIR DAN ANGIN KENCANG DI LAUT ARAFURU",
+            "wave_cat": "Rendah",
+            "wave_desc": "0.5 - 1.25 m",
+            "wind_from": "Selatan",
+            "wind_to": "Barat",
+            "wind_speed_min": 5,
+            "wind_speed_max": 15
+        },
+        {
+            "valid_from": "2022-06-04 12:00 UTC",
+            "valid_to": "2022-06-05 12:00 UTC",
+            "time_desc": "H+3",
+            "weather": null,
+            "weather_desc": "<ul>\n\t<li>BELOKAN ANGIN TERPANTAU DI LAUT ARAFURU</li>\n\t<li>PADA UMUMNYA ARAH ANGIN BERGERAK DARI TIMUR S.D TENGGARA DENGAN KECEPATAN 5 - 25 KT.</li>\n</ul>",
+            "warning_desc": "BERPOTENSI GELOMBANG TINGGI MENCAPAI 3 METER DAN ANGIN KENCANG DI LAUT ARAFURU&nbsp;",
+            "station_remark": "POTENSI HUJAN SEDANG HINGGA LEBAT DISERTAI PETIR DAN ANGIN KENCANG DI LAUT ARAFURU",
+            "wave_cat": "Rendah",
+            "wave_desc": "0.5 - 1.25 m",
+            "wind_from": "Barat Daya",
+            "wind_to": "Barat",
+            "wind_speed_min": 5,
+            "wind_speed_max": 15
+        }
+    ]
+}
